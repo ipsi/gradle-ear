@@ -22,7 +22,9 @@ import org.gradle.api.internal.ClassGenerator
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.plugins.ide.idea.model.IdeaModule
+import org.gradle.plugins.ide.idea.model.IdeaModuleIml
 import org.gradle.plugins.ide.idea.model.IdeaProject
+import org.gradle.plugins.ide.idea.model.IdeaProjectIpr
 import org.gradle.plugins.ide.idea.model.PathFactory
 import org.gradle.plugins.ide.internal.IdePlugin
 
@@ -70,15 +72,13 @@ class IdeaPlugin extends IdePlugin {
 
     private configureIdeaModule(Project project) {
         def task = project.task('ideaModule', description: 'Generates IDEA module files (IML)', type: GenerateIdeaModule) {
-            module = services.get(ClassGenerator).newInstance(IdeaModule)
-            module.project = project
-            module.xmlTransformer = xmlTransformer
+            def iml = new IdeaModuleIml(xmlTransformer: xmlTransformer, generateTo: project.projectDir)
+            module = services.get(ClassGenerator).newInstance(IdeaModule, [project: project, iml: iml])
 
             model.module = module
 
             module.conventionMapping.sourceDirs = { [] as LinkedHashSet }
             module.conventionMapping.name = { project.name }
-            module.conventionMapping.generateTo = { project.projectDir }
             module.conventionMapping.moduleDir = { project.projectDir }
             module.conventionMapping.testSourceDirs = { [] as LinkedHashSet }
             module.conventionMapping.excludeDirs = { [project.buildDir, project.file('.gradle')] as LinkedHashSet }
@@ -99,8 +99,8 @@ class IdeaPlugin extends IdePlugin {
     private configureIdeaProject(Project project) {
         if (isRoot(project)) {
             def task = project.task('ideaProject', description: 'Generates IDEA project file (IPR)', type: GenerateIdeaProject) {
-                ideaProject = services.get(ClassGenerator).newInstance(IdeaProject)
-                ideaProject.xmlTransformer = xmlTransformer
+                def ipr = new IdeaProjectIpr(xmlTransformer: xmlTransformer)
+                ideaProject = services.get(ClassGenerator).newInstance(IdeaProject, [ipr: ipr])
 
                 model.project = ideaProject
 

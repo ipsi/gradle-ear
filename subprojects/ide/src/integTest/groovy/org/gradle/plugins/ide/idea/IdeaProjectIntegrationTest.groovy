@@ -44,9 +44,11 @@ idea {
 
         outputFile = new File(outputFile.parentFile, 'someBetterName.ipr')
 
-        withXml {
-            def node = it.asNode()
-            node.appendNode('someInterestingConfiguration', 'hey buddy!')
+        ipr {
+            withXml {
+                def node = it.asNode()
+                node.appendNode('someInterestingConfiguration', 'hey buddy!')
+            }
         }
     }
 }
@@ -54,7 +56,6 @@ idea {
 
         //then
         def ipr = getFile([:], 'someBetterName.ipr').text
-        println ipr
         assert ipr.contains('1.44')
         assert ipr.contains('!?*.ruby')
         assert !ipr.contains('someProjectThatWillBeExcluded')

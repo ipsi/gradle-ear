@@ -54,7 +54,6 @@ dependencies { provided "junit:junit:4.8.2" }
 idea {
     module {
         name = 'foo'
-        generateTo = file('customImlFolder')
         moduleDir = file('customModuleContentRoot')
 
         sourceDirs += file('additionalCustomSources')
@@ -72,9 +71,13 @@ idea {
         javaVersion = '1.6'
         variables = [CUSTOM_VARIABLE: file('customModuleContentRoot').parentFile]
 
-        withXml {
-            def node = it.asNode()
-            node.appendNode('someInterestingConfiguration', 'hey!')
+        iml {
+            generateTo = file('customImlFolder')
+
+            withXml {
+                def node = it.asNode()
+                node.appendNode('someInterestingConfiguration', 'hey!')
+            }
         }
     }
 }
@@ -82,7 +85,6 @@ idea {
 
         //then
         def iml = parseImlFile('customImlFolder/foo')
-        println getFile([:], 'customImlFolder/foo.iml').text
         ['additionalCustomSources', 'additionalCustomTestSources', 'src/main/java'].each { expectedSrcFolder ->
             assert iml.component.content.sourceFolder.find { it.@url.text().contains(expectedSrcFolder) }
         }
@@ -123,11 +125,11 @@ apply plugin: "idea"
 idea {
     module {
         excludeDirs = [project.file('folderThatIsExcludedNow')] as Set
+        iml {
+            beforeMerged { it.excludeFolders.clear() }
+            whenMerged   { it.javaVersion = '1.33'   }
+        }
     }
-}
-ideaModule {
-    beforeConfigured { it.excludeFolders.clear() }
-    whenConfigured   { it.javaVersion = '1.33'   }
 }
 ''')
         //then
